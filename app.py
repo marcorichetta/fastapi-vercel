@@ -36,6 +36,6 @@ def get_github_profile(request: Request, username: str) -> Optional[models.Githu
     user = models.GithubUserModel(**response.json())
 
     # Sobreescribir la fecha con el formato que necesitamos
-    user.created_at = datetime.strptime(user.created_at, "%Y-%m-%dT%H:%M:%S%z").strftime("%d/%m/%y")
+    user.created_at = datetime.strptime(user.created_at, "%Y-%m-%dT%H:%M:%SZ").strftime("%d/%m/%y")
 
     return user
