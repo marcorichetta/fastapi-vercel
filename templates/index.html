@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Tailwind CSS -->
+        <link
+            href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+            rel="stylesheet"
+        />
+
+        <title>GitHub Profile Viewer</title>
+    </head>
+    <body
+        class="container mx-auto p-8 bg-gray-900 text-white font-sans flex flex-col"
+    >
+        {% include 'header.html' %}
+
+        <!-- Busqueda -->
+        <section
+            class="border border-gray-500 bg-gray-800 rounded-md p-4 mt-6 mb-2 mx-auto w-3/4 flex justify-evenly items-center flex-col lg:flex-row"
+        >
+            <form method="GET" action="/" class="my-auto">
+                <label class="text-lg p-4">User: </label>
+                <input
+                    type="text"
+                    name="username"
+                    required
+                    autocomplete="off"
+                    placeholder="Github username"
+                    class="w-48 lg:w-64 px-4 py-1 border-gray-500 border-box rounded bg-gray-900 placeholder-opacity-100"
+                />
+                <button
+                    type="submit"
+                    class="bg-green-500 border-box rounded px-4 py-1 mx-8"
+                >
+                    Search
+                </button>
+            </form>
+        </section>
+        <!--Fin Busqueda -->
+
+        {% if user %}
+
+        <!--Main -->
+        <main>
+            <section
+                class="border border-gray-500 bg-gray-800 rounded-md p-10 mt-6 mb-2 mx-auto w-3/4 flex justify-evenly items-center flex-col lg:flex-row"
+            >
+                <figure>
+                    <img
+                        src="{{ user. avatar_url }}"
+                        alt="Usuario"
+                        class="rounded-full h-40 w-40 flex items-center justify-center"
+                    />
+                </figure>
+                <div class="p-2 mt-2 w-full lg:w-3/5 lg:p-1">
+                    <p class="text-lg">
+                        Username:
+                        <label class="p-4 text-justify">{{ user.name }}</label>
+                    </p>
+
+                    <p class="text-lg">
+                        Biografia:
+                        <label class="p-4 text-justify">{{ user.bio }}</label>
+                    </p>
+                    <p class="text-lg">
+                        Website:
+                        <a href="{{ user.url }}" class="p-4 text-green-400"
+                            >{{ user.blog }}</a
+                        >
+                    </p>
+                    <p class="text-lg">
+                        Repositories:<label class="p-4">
+                            {{ user.public_repos }}
+                        </label>
+                    </p>
+                </div>
+            </section>
+        </main>
+        <!--Fin Main -->
+
+        {% elif user == False %}
+
+        <!-- Not Found -->
+        <section
+            class="border border-gray-500 bg-gray-800 rounded-md p-4 mt-6 mb-2 mx-auto w-3/4 flex justify-evenly items-center flex-col lg:flex-row"
+        >
+            <div class="my-auto">
+                <p class="text-2xl font-black text-center">❌ 404 not found</p>
+                <p class="text-md pt-4">Do you want to search again? ⬆️</p>
+            </div>
+        </section>
+        <!--Fin Not Found -->
+
+        {% endif %}
+
+        <!--Footer -->
+        {% include 'footer.html' %}
+        <!--Fin Footer -->
+    </body>
+</html>
