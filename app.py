@@ -23,8 +23,8 @@ def index(request: Request, username: str = None):
     return templates.TemplateResponse("index.html", context=context)
 
 
-@app.get("/{username}", response_model=models.GithubUser)
-def get_github_profile(request: Request, username: str) -> Optional[models.GithubUser]:
+@app.get("/{username}", response_model=models.GithubUserModel)
+def get_github_profile(request: Request, username: str) -> Optional[models.GithubUserModel]:
 
     headers = {"accept": "application/vnd.github.v3+json"}
 
@@ -33,7 +33,7 @@ def get_github_profile(request: Request, username: str) -> Optional[models.Githu
     if response.status_code == 404:
         return False
 
-    user = models.GithubUser(**response.json())
+    user = models.GithubUserModel(**response.json())
 
     # Sobreescribir la fecha con el formato que necesitamos
     user.created_at = datetime.strptime(user.created_at, "%Y-%m-%dT%H:%M:%S%z").strftime("%d/%m/%y")

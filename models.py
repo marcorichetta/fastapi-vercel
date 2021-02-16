@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class GithubUser(BaseModel):
+class GithubUserModel(BaseModel):
     login: str
     id: int
     node_id: str
