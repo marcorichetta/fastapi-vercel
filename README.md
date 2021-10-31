@@ -1,10 +1,11 @@
 # FastAPI on Vercel Example
 
-This is [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel].
+This is [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel](https://vercel.com/).
 
 ### Requirements
 
--   [Vercel] account
+-   Vercel account
+-   [Vercel CLI](https://vercel.com/cli)
 
 ### Setup
 
@@ -23,10 +24,9 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Deploy to [Vercel]
+4. Deploy to Vercel
 
 ```bash
 vercel
 ```
 
-[vercel]: (vercel.com/)
