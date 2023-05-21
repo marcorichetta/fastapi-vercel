@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+
+{% block not_found %}
+<!-- Not Found -->
+<section
+    class="border border-gray-500 bg-gray-800 rounded-md p-4 mt-6 mb-2 mx-auto w-3/4 flex justify-evenly items-center flex-col lg:flex-row"
+>
+    <div class="my-auto">
+        <p class="text-2xl font-black text-center">❓User not found❓</p>
+        <p class="text-md pt-4 text-center">Do you want to try again?</p>
+    </div>
+</section>
+<!--Fin Not Found -->
+
+{% endblock not_found %}
