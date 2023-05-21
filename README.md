@@ -1,16 +1,16 @@
 # FastAPI on Vercel Example
 
-This is [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel](https://vercel.com/).
+This is a [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel](https://vercel.com/).
 
 ### Requirements
 
 -   Vercel account
--   [Vercel CLI](https://vercel.com/cli)
+-   Vercel CLI
 
 ### Setup
 
 1. `git clone && cd fastapi-vercel`
-2. _(Recommended)_ Create a virtual environment and activate it
+1. _(Recommended)_ Create a virtual environment and activate it
 
 ```bash
 python -m venv env
@@ -18,15 +18,20 @@ python -m venv env
 source env/bin/activate
 ```
 
-3. Install dependencies
+1. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Deploy to Vercel
+1. Run it!
+
+```bash
+uvicorn main:app --reload
+```
+
+1. Deploy to Vercel
 
 ```bash
 vercel
 ```
-
