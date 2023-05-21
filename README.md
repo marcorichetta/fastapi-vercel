@@ -34,4 +34,6 @@ uvicorn main:app --reload
 
 ```bash
 vercel
+# or
+git push # on main
 ```
