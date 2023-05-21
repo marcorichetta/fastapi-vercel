@@ -3,6 +3,8 @@
 This is a [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel](https://vercel.com/).
 Read more about using Python at Vercel [here](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python#)
 
+![imagen](https://github.com/marcorichetta/fastapi-vercel/assets/19599150/7a48c145-9aa5-4225-a068-4cececcb6dae)
+
 ### Requirements
 
 -   Vercel account
