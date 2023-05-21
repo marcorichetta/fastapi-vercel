@@ -7,7 +7,7 @@ name =  "fastapi-vercel"
 version = "0.0.1"
 description = "FastAPI project deployed on Vercel"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = "3.9"
 
 dependencies = [
     "fastapi==0.95.2",

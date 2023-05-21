@@ -1,11 +1,13 @@
 # FastAPI on Vercel Example
 
 This is a [FastAPI](https://fastapi.tiangolo.com/) example app deployed on [Vercel](https://vercel.com/).
+Read more about using Python at Vercel [here](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python#)
 
 ### Requirements
 
 -   Vercel account
--   Vercel CLI
+-   Python 3.9 [Supported version at Vercel](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python#python-version)
+-   Vercel CLI (Optional)
 
 ### Setup
 

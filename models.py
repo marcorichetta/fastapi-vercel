@@ -1,10 +1,11 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
 class GithubUserModel(BaseModel):
-    name: str | None
+    name: Optional[str]
     blog: str
-    bio: str | None
+    bio: Optional[str]
     public_repos: int
     followers: int
     avatar_url: str
