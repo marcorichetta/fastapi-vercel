@@ -1,9 +1,8 @@
-from typing import Optional
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from models import GithubUserModel
+from models import ResearchRequest
 
 from typing import List
 import json
@@ -38,29 +37,8 @@ async def shutdown_event():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request, username: str = None):
-    if not username:
-        return templates.TemplateResponse("index.html", context={"request": request})
-
-    user = await get_github_profile(request, username)
-    if not user:
-        return templates.TemplateResponse("404.html", context={"request": request})
-
-    return templates.TemplateResponse("index.html", context={"request": request, "user": user})
-
-
-@app.get("/{username}", response_model=GithubUserModel)
-async def get_github_profile(request: Request, username: str) -> Optional[GithubUserModel]:
-    headers = {"accept": "application/vnd.github.v3+json"}
-
-    response = await client.get(f"https://api.github.com/users/{username}", headers=headers)
-
-    if response.status_code == 404:
-        return None
-
-    user = GithubUserModel(**response.json())
-
-    return user
+async def index():
+    return "Welcome to Elmo Brain API!"
 
 
 def search(query: str, num: int = 5, gl: str = "us"):
@@ -145,12 +123,6 @@ def market_analysis(content, product_title: str, countries: List[str]):
     )
     output = summary_chain.run(input_documents=docs, product_title=product_title, countries=countries)
     return output
-
-
-class ResearchRequest(BaseModel):
-    product_url: str
-    product_title: str
-    countries: List[str]
 
 
 @app.post("/research")
