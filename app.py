@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from models import ResearchRequest
 from fastapi import FastAPI
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 
@@ -15,6 +16,18 @@ from analysis import market_analysis, extract_country_pricing_analysis
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # React app address
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],
+)
 
 limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
 timeout = httpx.Timeout(timeout=5.0, read=15.0)
@@ -46,6 +59,7 @@ def research_product(request: ResearchRequest):
     Returns:
         - A dictionary with the product_id and the conducted analysis.
     """
+    print(request)
     product_url = request.product_url
     product_title = request.product_title
     countries = request.countries

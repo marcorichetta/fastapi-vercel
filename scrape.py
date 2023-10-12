@@ -49,7 +49,6 @@ def scrape_and_summarize(customer_product_url: str, product_title: str, countrie
                 - Main features and unique selling points of the product.
 
             Example Output:
-            Product Details:
             - Title: Silk Tie
             - Price: $38.50
             - Description: A high-quality silk tie suitable for formal events with a unique paisley design.
