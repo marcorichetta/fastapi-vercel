@@ -17,9 +17,7 @@ from analysis import market_analysis, extract_country_pricing_analysis
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",  # React app address
-]
+origins = ["http://localhost:3000", "https://elmo-aipfs9ovf-elmo-ui.vercel.app"]  # React app address
 
 app.add_middleware(
     CORSMiddleware,
