@@ -8,6 +8,19 @@ class Settings(BaseSettings):
     browserless_token: str
     llm_model: str
 
+    # DB envs
+    DB_HOST: str
+    DB_USERNAME: str
+    DB_PASSWORD: str
+    DB_NAME: str
+    DB_URL: str
+    DB_PORT: str
+    DB_LOCAL_URL: str
+
+    # Clerk Secret KEY
+    CLERK_SECRET_KEY: str
+    CLERK_BASE_URL: str
+
     class Config:
         env_file = ".env"
 

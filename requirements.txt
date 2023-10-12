@@ -16,6 +16,7 @@ click==8.1.7
 cloudpathlib==0.15.1
 confection==0.1.3
 cymem==2.0.8
+Cython==3.0.3
 dataclasses-json==0.6.1
 dill==0.3.7
 diskcache==5.6.3
@@ -58,6 +59,7 @@ more-itertools==10.1.0
 multidict==6.0.4
 murmurhash==1.0.10
 mypy-extensions==1.0.0
+mysql-connector-python==8.1.0
 nh3==0.2.14
 nltk==3.8.1
 numpy==1.26.0
@@ -67,6 +69,7 @@ packaging==23.2
 pathy==0.10.2
 pkginfo==1.9.6
 preshed==3.0.9
+protobuf==4.21.12
 pyautogen==0.1.9
 pycodestyle==2.11.0
 pydantic==2.4.2
