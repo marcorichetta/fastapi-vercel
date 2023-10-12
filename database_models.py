@@ -29,6 +29,7 @@ class Product(Base):
     scrape_details = Column(String(5000), nullable=True)
     analysis_result = Column(String(5000), nullable=True)
     country_pricing_analysis = Column(JSON, nullable=True)
+    competitor_analysis = Column(JSON, nullable=True)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

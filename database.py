@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from database_models import Base, Product
 from sqlalchemy.orm import sessionmaker
 from models import AddProductModel, UpdateProductModel
+from typing import Union
 
 
 def database(connection_string: str):
@@ -37,6 +38,7 @@ def add_product(product_data: AddProductModel) -> int:
         new_product = Product(**product_data)
         session.add(new_product)
         session.commit()
+        session.refresh(new_product)
         return new_product
     except Exception as e:
         session.rollback()
@@ -95,16 +97,23 @@ def delete_product_by_id(product_id: int):
         session.close()
 
 
-def update_product_by_user_and_url(user_id: int, product_url: str, update_data: UpdateProductModel):
+def update_product_by_user_and_url(user_id: int, product_url: str, update_data: Union[dict, UpdateProductModel]):
     """Update a product's details based on user_id and product_url."""
     session = SessionProd()
     try:
         product = session.query(Product).filter_by(userid=user_id, url=product_url).first()
         if not product:
             raise ValueError("No product associated with this user_id and product_url combination.")
+
+        # If update_data is a dictionary, convert it to UpdateProductModel
+        if isinstance(update_data, dict):
+            update_data = UpdateProductModel(**update_data)
+
         for key, value in update_data.dict(exclude_unset=True).items():
             setattr(product, key, value)
         session.commit()
+        session.refresh(product)
+        return product
     except Exception as e:
         session.rollback()
         raise
