@@ -9,12 +9,7 @@ class Settings(BaseSettings):
     llm_model: str
 
     # DB envs
-    DB_HOST: str
-    DB_USERNAME: str
-    DB_PASSWORD: str
-    DB_NAME: str
     DB_URL: str
-    DB_PORT: str
     DB_LOCAL_URL: str
 
     # Clerk Secret KEY
