@@ -9,8 +9,8 @@
     ],
     "functions": {
         "api/**/*.py": {
-            "includeFiles": ["**/*.py"],
-            "excludeFiles": ["**/__pycache__/**"]
+            "includeFiles": "**/*.py",
+            "excludeFiles": "**/__pycache__/**"
         }
     }
 }
