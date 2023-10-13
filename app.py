@@ -1,20 +1,22 @@
 import httpx
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from models import ResearchRequest
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi import FastAPI
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 
 
+from models import ResearchRequest
 from search import search, generate_google_query_with_llm
 from scrape import scrape_and_summarize
 from database import add_product, get_product_by_url, update_product_by_user_and_url
 from analysis import market_analysis, extract_country_pricing_analysis
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_remote_address, default_limits=["5/minutes"])
 app = FastAPI()
 
 origins = ["http://localhost:3000", "https://getelmo.vercel.app"]  # React app address
@@ -32,7 +34,23 @@ timeout = httpx.Timeout(timeout=5.0, read=15.0)
 client = httpx.AsyncClient(limits=limits, timeout=timeout)
 
 app.state.limiter = limiter
-# app.add_exception_handler(_rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+async def get_user_id(request: Request):
+    try:
+        body = await request.json()
+        user_id = body.get("user_id", "unauthenticated_user")
+        print(f"User ID: {user_id}")
+        return user_id
+    except Exception as e:
+        print(f"Error in get_user_id: {str(e)}")
+        return "unauthenticated_user"
+
+
+@app.exception_handler(RateLimitExceeded)
+async def ratelimit_error(request, exc):
+    return PlainTextResponse(str(exc.detail), status_code=HTTP_429_TOO_MANY_REQUESTS)
 
 
 @app.on_event("shutdown")
@@ -47,7 +65,7 @@ async def index():
 
 
 @app.post("/research")
-def research_product(request: ResearchRequest):
+async def research_product(request: Request):
     """
     Conducts research on a product by scraping and summarizing provided and generated URLs.
 
@@ -57,12 +75,13 @@ def research_product(request: ResearchRequest):
     Returns:
         - A dictionary with the product_id and the conducted analysis.
     """
-    print(request)
-    product_url = request.product_url
-    product_title = request.product_title
-    countries = request.countries
-    user_id = request.user_id
-    reanalyze = request.reanalyze
+    research_request: ResearchRequest = await request.json()
+
+    product_url = research_request["product_url"]
+    product_title = research_request["product_title"]
+    countries = research_request["countries"]
+    user_id = research_request["user_id"]
+    reanalyze = research_request["reanalyze"]
 
     existing_product = get_product_by_url(product_url)
 
