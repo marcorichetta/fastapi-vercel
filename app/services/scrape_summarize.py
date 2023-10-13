@@ -7,7 +7,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain import PromptTemplate
-from config import settings
+from app.config.config import settings
 
 
 async def scrape_and_summarize(customer_product_url: str, product_title: str, countries: List[str]):

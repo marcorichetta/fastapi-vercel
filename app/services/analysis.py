@@ -4,7 +4,7 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain import PromptTemplate
 
 from typing import List
-from config import settings
+from app.config.config import settings
 
 
 def market_analysis(content, product_title: str, countries: List[str]):

@@ -1,7 +1,7 @@
-import json
 import httpx
-from config import settings
+from app.config.config import settings
 from langchain.llms import OpenAI
+from json import JSONDecodeError
 
 
 from langchain.llms import OpenAI
@@ -25,8 +25,17 @@ def generate_google_query_with_llm(product_title: str, country: str) -> str:
 
 async def search(query: str, num: int = 5, gl: str = "us"):
     url = "https://google.serper.dev/search"
-    payload = json.dumps({"q": query, "gl": gl, "num": num})
+    payload = {"q": query, "gl": gl, "num": num}
     headers = {"X-API-KEY": settings.x_api_key, "Content-Type": "application/json"}
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers, json=payload)
-    return response.json()
+
+        # Check if the response status code is not 200 (OK)
+        if response.status_code != 200:
+            raise ValueError(f"Unexpected status code {response.status_code}: {response.text}")
+
+        # Safely parse the JSON response
+        try:
+            return response.json()
+        except JSONDecodeError:
+            raise ValueError(f"Unable to parse API response: {response.text}")

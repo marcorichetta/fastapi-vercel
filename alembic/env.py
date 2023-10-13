@@ -6,7 +6,7 @@ from database_models import Base
 from alembic import context
 
 # Fetch the connection string from your settings
-from config import Settings
+from app.config.config import Settings
 
 settings = Settings()
 

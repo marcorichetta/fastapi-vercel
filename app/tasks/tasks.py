@@ -1,47 +1,14 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from starlette.status import HTTP_429_TOO_MANY_REQUESTS
+from celery import shared_task
+
+from app.models import ResearchRequest
+from app.services.search_product import search, generate_google_query_with_llm
+from app.services.scrape_summarize import scrape_and_summarize
+from app.database.database import add_product, get_product_by_url, update_product_by_user_and_url
+from app.services.analysis import market_analysis, extract_country_pricing_analysis
 
 
-from models import ResearchRequest
-from search import search, generate_google_query_with_llm
-from scrape import scrape_and_summarize
-from database import add_product, get_product_by_url, update_product_by_user_and_url
-from analysis import market_analysis, extract_country_pricing_analysis
-
-app = FastAPI()
-
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-origins = ["http://localhost:3000", "https://getelmo.vercel.app"]  # React app address
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],
-)
-
-
-@app.exception_handler(RateLimitExceeded)
-async def ratelimit_error(request, exc):
-    return PlainTextResponse(str(exc.detail), status_code=HTTP_429_TOO_MANY_REQUESTS)
-
-
-@app.get("/", response_class=HTMLResponse)
-async def index():
-    return "Welcome to Elmo Brain API!"
-
-
-@app.post("/research")
-@limiter.limit("5/minute", error_message="Too many requests", key_func=get_remote_address)
-async def research_product(request: Request):
+@shared_task(bind=True, name="research_product_task")
+def research_product_task(self, request: ResearchRequest):
     """
     Conducts research on a product by scraping and summarizing provided and generated URLs.
 
@@ -51,13 +18,12 @@ async def research_product(request: Request):
     Returns:
         - A dictionary with the product_id and the conducted analysis.
     """
-    research_request: ResearchRequest = await request.json()
-
-    product_url = research_request["product_url"]
-    product_title = research_request["product_title"]
-    countries = research_request["countries"]
-    user_id = research_request["user_id"]
-    reanalyze = research_request["reanalyze"]
+    request = ResearchRequest(**request)
+    product_url = request.product_url
+    product_title = request.product_title
+    countries = request.countries
+    user_id = request.user_id
+    reanalyze = request.reanalyze
 
     existing_product = get_product_by_url(product_url)
 
@@ -74,19 +40,19 @@ async def research_product(request: Request):
         }
 
     # Scrape and summarize the main URL provided by the user
-    product_url_summary = await scrape_and_summarize(product_url, product_title, countries)
+    product_url_summary = scrape_and_summarize(product_url, product_title, countries)
     all_scraped_contents = [product_url_summary]
 
     search_results_array = []
 
     for country in countries:
         query = generate_google_query_with_llm(product_title, country)
-        search_results = await search(query, num=5, gl=country)
+        search_results = search(query, num=5, gl=country)
 
         # Scrape & summarize content for each URL result
         for result in search_results.get("results", []):
             if result.get("link"):
-                summary = await scrape_and_summarize(result.get("link", ""), product_title, countries)
+                summary = scrape_and_summarize(result.get("link", ""), product_title, countries)
                 all_scraped_contents.append(summary)
                 search_results_array.append({"url": result.get("link"), "summary": summary})
 

@@ -1,6 +1,6 @@
 from typing import Optional, Union
 import httpx
-from config import settings
+from app.config.config import settings
 
 
 class ClerkClient:

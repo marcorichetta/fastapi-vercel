@@ -1,11 +1,12 @@
-from config import settings
+from app.config.config import settings
 from contextlib import contextmanager
 from sqlalchemy import create_engine
-from database_models import Base, Product
+from app.models.database import Base, Product
 from sqlalchemy.orm import sessionmaker
-from models import AddProductModel, UpdateProductModel
+from app.models.product import AddProductModel, UpdateProductModel
 from typing import Union
 import logging
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,9 +54,9 @@ def session_scope():
 def add_product(product_data: AddProductModel) -> Product:
     with session_scope() as session:
         try:
-            new_product = Product(**product_data.dict())
+            new_product = Product(**product_data)
             session.add(new_product)
-            session.refresh(new_product)
+            session.commit()
             return new_product
         except Exception as e:
             logger.error(f"Error adding product: {str(e)}")
@@ -86,7 +87,11 @@ def get_product_by_url(product_url: str):
     with session_scope() as session:
         try:
             product = session.query(Product).filter_by(url=product_url).first()
-            return product
+            if product is None:
+                return None
+
+            product_dict = {c.name: getattr(product, c.name) for c in Product.__table__.columns}
+            return product_dict  # Return the dict, not the instance
         except Exception as e:
             logger.error(f"Error retrieving product by url {product_url}: {str(e)}")
             raise
