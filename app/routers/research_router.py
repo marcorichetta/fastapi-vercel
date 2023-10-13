@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Request
-from pydantic import BaseModel
+from fastapi import APIRouter
 from app.services import research_service
 from app.models.research_request import ResearchRequest
 

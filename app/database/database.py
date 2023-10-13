@@ -1,40 +1,14 @@
-from app.config.config import settings
-from contextlib import contextmanager
-from sqlalchemy import create_engine
-from app.models.database import Base, Product
-from sqlalchemy.orm import sessionmaker
-from app.models.product import AddProductModel, UpdateProductModel
-from typing import Union
 import logging
+from typing import Union
+from contextlib import contextmanager
+
+from app.database.schema.database import Product
+from app.models.product import AddProductModel, UpdateProductModel
+from app.database.db_setup import SessionProd
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def database(connection_string: str):
-    db_engine = create_engine(connection_string, echo=True)
-    Base.metadata.create_all(db_engine)
-    return db_engine
-
-
-if __name__ == "__main__":
-    # Choose which DB you want to connect to
-    use_db = input("Choose DB [prod/local]: ").lower()
-
-    if use_db == "prod":
-        db_engine = database(settings.DB_URL)
-    elif use_db == "local":
-        db_engine = database(settings.DB_LOCAL_URL)
-    else:
-        print("Invalid choice!")
-
-
-PROD_ENGINE = database(settings.DB_URL)
-SessionProd = sessionmaker(autocommit=False, autoflush=False, bind=PROD_ENGINE)
-
-
-## DB FUNCTIONSfrom models import AddProductModel, UpdateProductModel
 
 
 @contextmanager
@@ -54,33 +28,44 @@ def session_scope():
 def add_product(product_data: AddProductModel) -> Product:
     with session_scope() as session:
         try:
-            new_product = Product(**product_data)
+            new_product = Product(**product_data.dict())
             session.add(new_product)
-            session.commit()
             return new_product
         except Exception as e:
             logger.error(f"Error adding product: {str(e)}")
-            raise
+            raise ValueError("Could not add product. Check the logs for more information.")
 
 
 def get_products_by_userid(userid: int):
+    if not isinstance(userid, int):
+        raise ValueError("User ID must be an integer.")
+
     with session_scope() as session:
         try:
             products = session.query(Product).filter_by(userid=userid).all()
+            if not products:
+                logger.warning(f"No products found for userid {userid}")
+                return []
             return products
         except Exception as e:
             logger.error(f"Error retrieving products for userid {userid}: {str(e)}")
-            raise
+            raise ValueError("Could not retrieve products. Check the logs for more information.")
 
 
 def get_product_by_id(product_id: int):
+    if not isinstance(product_id, int):
+        raise ValueError("Product ID must be an integer.")
+
     with session_scope() as session:
         try:
             product = session.query(Product).get(product_id)
+            if not product:
+                logger.warning(f"No product found with id {product_id}")
+                return None
             return product
         except Exception as e:
             logger.error(f"Error retrieving product by id {product_id}: {str(e)}")
-            raise
+            raise ValueError("Could not retrieve product. Check the logs for more information.")
 
 
 def get_product_by_url(product_url: str):
@@ -88,26 +73,30 @@ def get_product_by_url(product_url: str):
         try:
             product = session.query(Product).filter_by(url=product_url).first()
             if product is None:
+                logger.warning(f"No product found with url {product_url}")
                 return None
-
             product_dict = {c.name: getattr(product, c.name) for c in Product.__table__.columns}
-            return product_dict  # Return the dict, not the instance
+            return product_dict
         except Exception as e:
             logger.error(f"Error retrieving product by url {product_url}: {str(e)}")
-            raise
+            raise ValueError("Could not retrieve product. Check the logs for more information.")
 
 
 def delete_product_by_id(product_id: int):
+    if not isinstance(product_id, int):
+        raise ValueError("Product ID must be an integer.")
+
     with session_scope() as session:
         try:
             product = session.query(Product).get(product_id)
             if product:
                 session.delete(product)
+                session.commit()
             else:
                 logger.warning(f"No product found with id {product_id}")
         except Exception as e:
             logger.error(f"Error deleting product with id {product_id}: {str(e)}")
-            raise
+            raise ValueError("Could not delete product. Check the logs for more information.")
 
 
 def update_product_by_user_and_url(user_id: int, product_url: str, update_data: Union[dict, UpdateProductModel]):
@@ -126,4 +115,4 @@ def update_product_by_user_and_url(user_id: int, product_url: str, update_data: 
             return product
         except Exception as e:
             logger.error(f"Error updating product for user_id {user_id} and url {product_url}: {str(e)}")
-            raise
+            raise ValueError("Could not update product. Check the logs for more information.")
