@@ -74,19 +74,19 @@ async def research_product(request: Request):
         }
 
     # Scrape and summarize the main URL provided by the user
-    product_url_summary = scrape_and_summarize(product_url, product_title, countries)
+    product_url_summary = await scrape_and_summarize(product_url, product_title, countries)
     all_scraped_contents = [product_url_summary]
 
     search_results_array = []
 
     for country in countries:
         query = generate_google_query_with_llm(product_title, country)
-        search_results = search(query, num=5, gl=country)
+        search_results = await search(query, num=5, gl=country)
 
         # Scrape & summarize content for each URL result
         for result in search_results.get("results", []):
             if result.get("link"):
-                summary = scrape_and_summarize(result.get("link", ""), product_title, countries)
+                summary = await scrape_and_summarize(result.get("link", ""), product_title, countries)
                 all_scraped_contents.append(summary)
                 search_results_array.append({"url": result.get("link"), "summary": summary})
 

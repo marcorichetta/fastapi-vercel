@@ -1,5 +1,5 @@
 import json
-import requests
+import httpx
 from bs4 import BeautifulSoup
 from typing import List
 from fastapi import HTTPException
@@ -10,18 +10,19 @@ from langchain import PromptTemplate
 from config import settings
 
 
-def scrape_and_summarize(customer_product_url: str, product_title: str, countries: List[str]):
+async def scrape_and_summarize(customer_product_url: str, product_title: str, countries: List[str]):
     headers = {
         "Cache-Control": "no-cache",
         "Content-Type": "application/json",
     }
     data = {"url": customer_product_url}
     data_json = json.dumps(data)
-    response = requests.post(
-        f"https://chrome.browserless.io/content?token={settings.browserless_token}",
-        headers=headers,
-        data=data_json,
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"https://chrome.browserless.io/content?token={settings.browserless_token}",
+            headers=headers,
+            data=data_json,
+        )
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, "html.parser")
         text = soup.get_text()

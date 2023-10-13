@@ -1,9 +1,14 @@
 from config import settings
+from contextlib import contextmanager
 from sqlalchemy import create_engine
 from database_models import Base, Product
 from sqlalchemy.orm import sessionmaker
 from models import AddProductModel, UpdateProductModel
 from typing import Union
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def database(connection_string: str):
@@ -31,91 +36,89 @@ SessionProd = sessionmaker(autocommit=False, autoflush=False, bind=PROD_ENGINE)
 ## DB FUNCTIONSfrom models import AddProductModel, UpdateProductModel
 
 
-def add_product(product_data: AddProductModel) -> int:
-    """Add a new product for a user."""
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
     session = SessionProd()
     try:
-        new_product = Product(**product_data)
-        session.add(new_product)
+        yield session
         session.commit()
-        session.refresh(new_product)
-        return new_product
     except Exception as e:
         session.rollback()
         raise
     finally:
         session.close()
+
+
+def add_product(product_data: AddProductModel) -> Product:
+    with session_scope() as session:
+        try:
+            new_product = Product(**product_data.dict())
+            session.add(new_product)
+            session.refresh(new_product)
+            return new_product
+        except Exception as e:
+            logger.error(f"Error adding product: {str(e)}")
+            raise
 
 
 def get_products_by_userid(userid: int):
-    """Retrieve all products for a given user."""
-    session = SessionProd()
-    try:
-        products = session.query(Product).filter_by(userid=userid).all()
-        return products
-    except Exception as e:
-        raise
-    finally:
-        session.close()
+    with session_scope() as session:
+        try:
+            products = session.query(Product).filter_by(userid=userid).all()
+            return products
+        except Exception as e:
+            logger.error(f"Error retrieving products for userid {userid}: {str(e)}")
+            raise
 
 
 def get_product_by_id(product_id: int):
-    """Retrieve a product by its primary key."""
-    session = SessionProd()
-    try:
-        product = session.query(Product).get(product_id)
-        return product
-    except Exception as e:
-        raise
-    finally:
-        session.close()
+    with session_scope() as session:
+        try:
+            product = session.query(Product).get(product_id)
+            return product
+        except Exception as e:
+            logger.error(f"Error retrieving product by id {product_id}: {str(e)}")
+            raise
 
 
 def get_product_by_url(product_url: str):
-    """Retrieve a product by its URL."""
-    session = SessionProd()
-    try:
-        product = session.query(Product).filter_by(url=product_url).first()
-        return product
-    except Exception as e:
-        raise
-    finally:
-        session.close()
+    with session_scope() as session:
+        try:
+            product = session.query(Product).filter_by(url=product_url).first()
+            return product
+        except Exception as e:
+            logger.error(f"Error retrieving product by url {product_url}: {str(e)}")
+            raise
 
 
 def delete_product_by_id(product_id: int):
-    """Delete a product by its primary key."""
-    session = SessionProd()
-    try:
-        product = session.query(Product).get(product_id)
-        session.delete(product)
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    with session_scope() as session:
+        try:
+            product = session.query(Product).get(product_id)
+            if product:
+                session.delete(product)
+            else:
+                logger.warning(f"No product found with id {product_id}")
+        except Exception as e:
+            logger.error(f"Error deleting product with id {product_id}: {str(e)}")
+            raise
 
 
 def update_product_by_user_and_url(user_id: int, product_url: str, update_data: Union[dict, UpdateProductModel]):
-    """Update a product's details based on user_id and product_url."""
-    session = SessionProd()
-    try:
-        product = session.query(Product).filter_by(userid=user_id, url=product_url).first()
-        if not product:
-            raise ValueError("No product associated with this user_id and product_url combination.")
+    with session_scope() as session:
+        try:
+            product = session.query(Product).filter_by(userid=user_id, url=product_url).first()
+            if not product:
+                raise ValueError("No product associated with this user_id and product_url combination.")
 
-        # If update_data is a dictionary, convert it to UpdateProductModel
-        if isinstance(update_data, dict):
-            update_data = UpdateProductModel(**update_data)
+            if isinstance(update_data, dict):
+                update_data = UpdateProductModel(**update_data)
 
-        for key, value in update_data.dict(exclude_unset=True).items():
-            setattr(product, key, value)
-        session.commit()
-        session.refresh(product)
-        return product
-    except Exception as e:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+            for key, value in update_data.dict(exclude_unset=True).items():
+                setattr(product, key, value)
+            session.refresh(product)
+            return product
+        except Exception as e:
+            logger.error(f"Error updating product for user_id {user_id} and url {product_url}: {str(e)}")
+            raise

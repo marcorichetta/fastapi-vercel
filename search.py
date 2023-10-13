@@ -1,6 +1,6 @@
 import json
+import httpx
 from config import settings
-import requests
 from langchain.llms import OpenAI
 
 
@@ -23,9 +23,10 @@ def generate_google_query_with_llm(product_title: str, country: str) -> str:
     return query
 
 
-def search(query: str, num: int = 5, gl: str = "us"):
+async def search(query: str, num: int = 5, gl: str = "us"):
     url = "https://google.serper.dev/search"
     payload = json.dumps({"q": query, "gl": gl, "num": num})
     headers = {"X-API-KEY": settings.x_api_key, "Content-Type": "application/json"}
-    response = requests.request("POST", url, headers=headers, data=payload)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=payload)
     return response.json()
