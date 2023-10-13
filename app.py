@@ -1,8 +1,5 @@
-import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
-from fastapi import FastAPI
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -16,11 +13,13 @@ from scrape import scrape_and_summarize
 from database import add_product, get_product_by_url, update_product_by_user_and_url
 from analysis import market_analysis, extract_country_pricing_analysis
 
-limiter = Limiter(key_func=get_remote_address, default_limits=["5/minutes"])
 app = FastAPI()
 
-origins = ["http://localhost:3000", "https://getelmo.vercel.app"]  # React app address
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+origins = ["http://localhost:3000", "https://getelmo.vercel.app"]  # React app address
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -29,34 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
-timeout = httpx.Timeout(timeout=5.0, read=15.0)
-client = httpx.AsyncClient(limits=limits, timeout=timeout)
-
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-
-async def get_user_id(request: Request):
-    try:
-        body = await request.json()
-        user_id = body.get("user_id", "unauthenticated_user")
-        print(f"User ID: {user_id}")
-        return user_id
-    except Exception as e:
-        print(f"Error in get_user_id: {str(e)}")
-        return "unauthenticated_user"
-
 
 @app.exception_handler(RateLimitExceeded)
 async def ratelimit_error(request, exc):
     return PlainTextResponse(str(exc.detail), status_code=HTTP_429_TOO_MANY_REQUESTS)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("shutting down...")
-    await client.aclose()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -65,6 +40,7 @@ async def index():
 
 
 @app.post("/research")
+@limiter.limit("5/minute", error_message="Too many requests", key_func=get_remote_address)
 async def research_product(request: Request):
     """
     Conducts research on a product by scraping and summarizing provided and generated URLs.
