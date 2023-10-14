@@ -1,25 +1,30 @@
-from marshmallow import Schema, fields, ValidationError
+from pydantic import BaseModel, HttpUrl
+from typing import Optional
 
 
-class ProductSchema(Schema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(required=True)
-    url = fields.Url(required=True)
-    description = fields.Str()
-    price = fields.Float()
-    userid = fields.Int(required=True)
+from typing import List, Dict
+from pydantic import BaseModel
 
 
-class AddProductModelSchema(Schema):
-    name = fields.Str(required=True)
-    url = fields.Url(required=True)
-    description = fields.Str()
-    price = fields.Float()
-    userid = fields.Int(required=True)
+from typing import Optional, List, Dict
+from pydantic import BaseModel
 
 
-class UpdateProductModelSchema(Schema):
-    name = fields.Str()
-    url = fields.Url()
-    description = fields.Str()
-    price = fields.Float()
+class ProductModel(BaseModel):
+    userid: str
+    url: str
+    title: str
+    scrape_details: str
+    analysis_result: str
+    country_pricing_analysis: Optional[List[Dict]]
+    competitor_analysis: Optional[List[Dict]]
+
+    class Config:
+        orm_mode = True
+
+
+class UpdateProductModel(BaseModel):
+    name: str
+    url: HttpUrl
+    description: str
+    price: str

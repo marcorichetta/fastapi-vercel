@@ -25,18 +25,60 @@ def session_scope():
         session.close()
 
 
-def add_product(product_data: AddProductModel) -> Product:
+def add_product(product_data: AddProductModel) -> dict:
     with session_scope() as session:
         try:
-            new_product = Product(**product_data.dict())
+            product_data_dict = product_data.model_dump()
+            product_data_dict["url"] = str(product_data_dict["url"])
+
+            new_product = Product(**product_data_dict)
             session.add(new_product)
-            return new_product
+            session.commit()
+            session.refresh(new_product)
+
+            # Create a dictionary of the new product's attributes
+            new_product_dict = {
+                "id": new_product.id,
+                "userid": new_product.userid,
+                "url": new_product.url,
+                "title": new_product.title,
+                "scrape_details": new_product.scrape_details,
+                "analysis_result": new_product.analysis_result,
+                "country_pricing_analysis": new_product.country_pricing_analysis,
+                "competitor_analysis": new_product.competitor_analysis,
+            }
+
+            return new_product_dict
         except Exception as e:
             logger.error(f"Error adding product: {str(e)}")
             raise ValueError("Could not add product. Check the logs for more information.")
 
 
-def get_products_by_userid(userid: int):
+def get_product_by_url(product_url: str) -> Union[dict, None]:
+    with session_scope() as session:
+        try:
+            product = session.query(Product).filter_by(url=product_url).first()
+            if product is None:
+                logger.warning(f"No product found with url {product_url}")
+                return None
+            product_dict = {
+                "id": product.id,
+                "userid": product.userid,
+                "url": product.url,
+                "title": product.title,
+                "scrape_details": product.scrape_details,
+                "analysis_result": product.analysis_result,
+                "country_pricing_analysis": product.country_pricing_analysis,
+                "competitor_analysis": product.competitor_analysis,
+            }
+            logger.info(f"Retrieved product: {product_dict}")
+            return product_dict
+        except Exception as e:
+            logger.error(f"Error retrieving product by url {product_url}: {str(e)}")
+            raise ValueError("Could not retrieve product. Check the logs for more information.")
+
+
+def get_products_by_userid(userid: int) -> list[Product]:
     if not isinstance(userid, int):
         raise ValueError("User ID must be an integer.")
 
@@ -52,7 +94,7 @@ def get_products_by_userid(userid: int):
             raise ValueError("Could not retrieve products. Check the logs for more information.")
 
 
-def get_product_by_id(product_id: int):
+def get_product_by_id(product_id: int) -> Union[Product, None]:
     if not isinstance(product_id, int):
         raise ValueError("Product ID must be an integer.")
 
@@ -68,21 +110,7 @@ def get_product_by_id(product_id: int):
             raise ValueError("Could not retrieve product. Check the logs for more information.")
 
 
-def get_product_by_url(product_url: str):
-    with session_scope() as session:
-        try:
-            product = session.query(Product).filter_by(url=product_url).first()
-            if product is None:
-                logger.warning(f"No product found with url {product_url}")
-                return None
-            product_dict = {c.name: getattr(product, c.name) for c in Product.__table__.columns}
-            return product_dict
-        except Exception as e:
-            logger.error(f"Error retrieving product by url {product_url}: {str(e)}")
-            raise ValueError("Could not retrieve product. Check the logs for more information.")
-
-
-def delete_product_by_id(product_id: int):
+def delete_product_by_id(product_id: int) -> None:
     if not isinstance(product_id, int):
         raise ValueError("Product ID must be an integer.")
 
@@ -99,7 +127,9 @@ def delete_product_by_id(product_id: int):
             raise ValueError("Could not delete product. Check the logs for more information.")
 
 
-def update_product_by_user_and_url(user_id: int, product_url: str, update_data: Union[dict, UpdateProductModel]):
+def update_product_by_user_and_url(
+    user_id: int, product_url: str, update_data: Union[dict, UpdateProductModel]
+) -> Product:
     with session_scope() as session:
         try:
             product = session.query(Product).filter_by(userid=user_id, url=product_url).first()
@@ -109,7 +139,7 @@ def update_product_by_user_and_url(user_id: int, product_url: str, update_data: 
             if isinstance(update_data, dict):
                 update_data = UpdateProductModel(**update_data)
 
-            for key, value in update_data.dict(exclude_unset=True).items():
+            for key, value in update_data.model_dump(exclude_unset=True).items():
                 setattr(product, key, value)
             session.refresh(product)
             return product

@@ -1,3 +1,4 @@
+from app.models.database import ProductModel
 from app.models.research_request import ResearchRequest
 from app.database.database import get_product_by_url
 from app.services.search_product import search, generate_google_query_with_llm
@@ -60,26 +61,26 @@ async def detailed_research_product(request: ResearchRequest):
             "\n".join(all_scraped_contents), research_request.product_title, research_request.countries
         )
 
-        product_data = {
-            "userid": research_request.user_id,
-            "url": research_request.product_url,
-            "title": research_request.product_title,
-            "scrape_details": "\n".join(all_scraped_contents),
-            "analysis_result": analysis_result,
-            "country_pricing_analysis": detailed_analysis,
-            "competitor_analysis": search_results_array,
-        }
+        product = ProductModel(
+            userid=research_request.id,
+            url=research_request.product_url,
+            title=research_request.product_title,
+            scrape_details="\n".join(all_scraped_contents),
+            analysis_result=analysis_result,
+            country_pricing_analysis=detailed_analysis,
+            competitor_analysis=search_results_array,
+        )
 
-        product = await create_or_update_product_data(product_data, existing_product, research_request.reanalyze)
+        product = await create_or_update_product_data(product, existing_product, research_request.reanalyze)
 
         return {
-            "product_id": product["id"],
-            "analysis": product["analysis_result"],
-            "scrape_details": product["scrape_details"],
-            "url": product["url"],
-            "title": product["title"],
-            "country_pricing_analysis": product["country_pricing_analysis"],
-            "competitor_analysis": product["competitor_analysis"],
+            "product_id": product.id,
+            "analysis": product.analysis_result,
+            "scrape_details": product.scrape_details,
+            "url": product.url,
+            "title": product.title,
+            "country_pricing_analysis": product.country_pricing_analysis,
+            "competitor_analysis": product.competitor_analysis,
             "message": "Product analysis conducted successfully.",
         }
 
@@ -88,7 +89,7 @@ async def detailed_research_product(request: ResearchRequest):
         raise ValueError(f"An error occurred during product research: {str(e)}")
 
 
-async def research_product(request: ResearchRequest):
+async def research_product(request: ResearchRequest) -> dict:
     """
     Conducts research on a product by scraping and summarizing provided URLs.
 
