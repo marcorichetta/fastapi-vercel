@@ -137,3 +137,24 @@ async def research_product(request: ResearchRequest) -> dict:
     except Exception as e:
         # You might want to log the exception here
         raise ValueError(f"An error occurred during product research: {str(e)}")
+
+
+from app.database.database import get_all_products_by_user_id
+
+
+async def get_all_products(user_id: str) -> list:
+    """
+    Fetches all products for a given user ID.
+
+    Parameters:
+        - user_id: The ID of the user.
+
+    Returns:
+        - A list of dictionaries, each representing a product.
+    """
+    try:
+        products = get_all_products_by_user_id(user_id)
+        return products
+    except Exception as e:
+        # Logging or further exception handling here
+        raise ValueError(f"An error occurred while fetching products: {str(e)}")

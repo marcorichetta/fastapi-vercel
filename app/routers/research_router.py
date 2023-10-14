@@ -14,3 +14,13 @@ async def research_product(request: ResearchRequest):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return {"status": "error", "detail": str(e)}
+
+
+@router.get("/research/{user_id}")
+async def get_all_products(user_id: str):
+    try:
+        response = await research_service.get_all_products(user_id)
+        return response
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return {"status": "error", "detail": str(e)}

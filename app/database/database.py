@@ -78,6 +78,29 @@ def get_product_by_url(product_url: str) -> Union[dict, None]:
             raise ValueError("Could not retrieve product. Check the logs for more information.")
 
 
+def get_all_products_by_user_id(user_id: str) -> list:
+    with session_scope() as session:
+        try:
+            products = session.query(Product).filter_by(userid=user_id).all()
+            products_list = [
+                {
+                    "id": product.id,
+                    "userid": product.userid,
+                    "url": product.url,
+                    "title": product.title,
+                    "scrape_details": product.scrape_details,
+                    "analysis_result": product.analysis_result,
+                    "country_pricing_analysis": product.country_pricing_analysis,
+                    "competitor_analysis": product.competitor_analysis,
+                }
+                for product in products
+            ]
+            return products_list
+        except Exception as e:
+            logger.error(f"Error retrieving products for user_id {user_id}: {str(e)}")
+            raise ValueError("Could not retrieve products. Check the logs for more information.")
+
+
 def get_products_by_userid(userid: int) -> list[Product]:
     if not isinstance(userid, int):
         raise ValueError("User ID must be an integer.")
